@@ -1,7 +1,7 @@
 This folder contains pyinstaller compiled binaries for Debian 10 (Buster) and Windows 10 (1909).
 The following AntiVirus software *falsely* identifies the Windows binary as a trojan/malware:
 
-
+________________________________________
 Antiy-AVL - Trojan[PSW]/Python.Agent
 
 SecureAge APEX - Malicious
@@ -21,10 +21,12 @@ Tencent - Malware.Win32.Gencirc.11ba19a2
 Yandex - Trojan.RegRun!hO0NykKcr0w
 
 Zillya - Tool.Convagent.Win32.58
+________________________________________
 
 So you'll need to set an exclusion in those AVs in order to use it unmolested under Windows.
 Otherwise, just install Python for windows and run the script natively.
 
+________________________________________
 
 ***SHA265 Hashes***
 
