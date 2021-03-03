@@ -10,6 +10,11 @@ Licensed under MIT License
 ```bash
 ./telnet-enable2.py <ip> <mac> <username> [<password>]
 ```
+- ip is usually 192.168.2.1
+- mac is mac of br0 interface
+- username is usually "admin"
+- password is your unhashed password
+
 
 ## Credits :
 - https://github.com/jashandeep-sohi/python-blowfish (Sorry, I had to mod your blowfish)
