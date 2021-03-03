@@ -1,4 +1,4 @@
-# Netgear Enable Telnet (New Crypto) for Netgear LBR20 (and maybe others)
+# Netgear Enable Telnet (New Crypto) for Netgear Orbi LBR20 (possibly works for others in the Orbi famlily and beyond)
 (c) B.Kerler 2021
 Licensed under MIT License
 
@@ -10,10 +10,10 @@ Licensed under MIT License
 ```bash
 ./telnet-enable2.py <ip> <mac> <username> [<password>]
 ```
-- ip is usually 192.168.2.1
+- ip is usually 192.168.1.1
 - mac is mac of br0 interface
 - username is usually "admin"
-- password is your unhashed password
+- password is your unhashed Web GUI password
 
 
 ## Credits :
@@ -21,4 +21,4 @@ Licensed under MIT License
 
 - Paul Gebheim's original code from 2009, which no longer works
 
-- Ryan Roosa @RRoosA2, who pushed me to do it and spent me a pizza :D
+- hazarjast, who pushed me to do it and spent me a pizza :D
