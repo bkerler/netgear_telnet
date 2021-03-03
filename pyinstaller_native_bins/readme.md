@@ -29,4 +29,5 @@ Otherwise, just install Python for windows and run the script natively.
 ***SHA265 Hashes***
 
 Debian Binary (telnet-enable2) - 5b9eb9abe05669bbff54c2c5d7d8fb310912be66b7ed3a7ceb6f523ce8ad1d3a
+
 Windows Binary (telnet-enable2.exe) - ab2f5566f252d3391a2332b050e258e8afa7e736d54930199ecd0332358d7489
