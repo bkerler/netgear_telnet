@@ -10,6 +10,10 @@ Licensed under MIT License
 ```bash
 ./telnet-enable2.py <ip> <mac> <username> [<password>]
 ```
+Ex:
+```
+./telnet-enable2.py 192.168.1.1 A0:40:A0:69:B6:30 admin <yourpass>
+```
 - ip is usually 192.168.1.1
 - mac is mac of br0 interface
 - username is usually "admin"
