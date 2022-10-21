@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Algo Netgear LBR20
-Copyright (c) 2021 B. Kerler
+Copyright (c) 2021-2022 B. Kerler
 Blowfish algo (c) https://github.com/jashandeep-sohi/python-blowfish
 """
 
@@ -25,7 +25,8 @@ def get_arp_table_darwin():
     :rtype: dict {'ip_address': 'mac_address'}
     """
 
-    arp_data_re = re.compile(r'^\S+ \((?P<ip_address>[^\)]+)\) at (?P<hw_address>(?:[0-9a-f]{2}:){5}(?:[0-9a-f]{2})) on (?P<device>\S+) ifscope \[(?P<type>\S+)\]$')
+    arp_data_re = re.compile(
+        r'^\S+ \((?P<ip_address>[^\)]+)\) at (?P<hw_address>(?:[0-9a-f]{2}:){5}(?:[0-9a-f]{2})) on (?P<device>\S+) ifscope \[(?P<type>\S+)\]$')
 
     arp_data_raw = subprocess.check_output(['arp', '-a', '-n']).split("\n")[:-1]
     parsed_arp_table = (arp_data_re.match(i).groupdict() for i in arp_data_raw)
@@ -66,8 +67,6 @@ def get_arp_table():
         raise Exception("Unable to fetch ARP table on %s" % (sys.platform,))
 
 
-
-
 def get_mac_address(ip):
     """
     Get MAC address for a given IP address by looking it up in the host's ARP table
@@ -84,6 +83,7 @@ def get_mac_address(ip):
         return None
     else:
         return arp_table[ip]
+
 
 class Blowfish():
     # 1 x 18
@@ -276,6 +276,7 @@ class Blowfish():
             0xb74e6132, 0xce77e25b, 0x578fdfe3, 0x3ac372e6,
         ),
     )
+
     def __init__(
             self,
             key,
@@ -460,6 +461,7 @@ class Blowfish():
                 *decrypt(cipher_L, cipher_R, P, S1, S2, S3, S4, u4_1_pack, u1_4_unpack)
             )
 
+
 # The version of Blowfish supplied for the telenetenable.c implementation
 # assumes Big-Endian data, but the code does nothing to convert the
 # little-endian stuff it's getting on intel to Big-Endian
@@ -488,33 +490,55 @@ def genhash(mac, username, password=''):
     mac = mac.replace(':', '').upper()
 
     # Pad the input correctly
-    assert(len(mac) < 0x10)
+    assert (len(mac) < 0x10)
     just_mac = mac.encode('utf8').ljust(0x10, b'\x00')
 
-    assert(len(username) <= 0x10)
+    assert (len(username) <= 0x10)
     just_username = username.encode('utf8').ljust(0x10, b'\x00')
 
-    assert(len(password) <= 0x50)
+    assert (len(username) <= 0x10)
+    hashed_pw = bytes(sha256(password.encode('utf-8')).hexdigest().lower(), 'utf-8').ljust(0x30, b'\x00')
+
+    assert (len(password) <= 0x50)
     just_password = password.encode('utf8').ljust(0x50, b'\x00')
 
-    cleartext = (just_mac + just_username + just_password).ljust(0x70, b'\x00')
-    #print(hexlify(cleartext).decode('utf-8'))
+    cleartext = (just_mac + just_username + hashed_pw + just_password).ljust(0x70, b'\x00')
+    # print(hexlify(cleartext).decode('utf-8'))
     md5_key = md5(cleartext).digest()
-    #print("MD5:"+hexlify(md5_key).decode('utf-8'))
-    payload=(md5_key + cleartext).ljust(0xB0, b'\x00')
-    #print("Payload: " + hexlify(payload).decode('utf-8'))
+    # print("MD5:"+hexlify(md5_key).decode('utf-8'))
+    payload = (md5_key + cleartext).ljust(0xB0, b'\x00')
+    # print("Payload: " + hexlify(payload).decode('utf-8'))
 
     secret_key = ('AMBIT_TELNET_ENABLE+' + password)[:0x80]
-    #print("Key: "+secret_key)
+    # print("Key: "+secret_key)
 
-    cipher=Blowfish(secret_key.encode('utf8'),byte_order = "little")
-    rdata=b"".join(cipher.encrypt_ecb(payload))
-    #print(hexlify(rdata).decode('utf-8'))
+    cipher = Blowfish(secret_key.encode('utf8'), byte_order="little")
+    rdata = b"".join(cipher.encrypt_ecb(payload))
+    # print(hexlify(rdata).decode('utf-8'))
     return rdata
 
 
+def hashtest(mac, username, password, payload):
+    secret_key = ('AMBIT_TELNET_ENABLE+' + password)[:0x80]
+    cipher = Blowfish(secret_key.encode('utf8'), byte_order="little")
+    rdata = b"".join(cipher.decrypt_ecb(payload))
+    md5_key = md5(rdata[0x10:]).digest()
+    if rdata[:0x10] != md5_key:
+        print("Error md5")
+    if mac != rdata[0x10:0x10 + (6 * 2)].decode('utf-8'):
+        print("Error mac")
+    rusername = rdata[0x20:0x30].rstrip(b"\x00").decode('utf-8')
+    if username != rusername[:len(username)]:
+        print("Error username")
+    pwd_digest = rdata[0x30:0x30 + (0x20 * 2)].decode('utf-8')
+    hashed_pw = sha256(password.encode('utf-8')).hexdigest().lower()
+    if hashed_pw != pwd_digest:
+        print("Error pw digest")
+    print("All ok")
+
+
 def sendtelnet(ip, data):
-    port=23
+    port = 23
     for result in socket.getaddrinfo(ip, port, socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_IP):
         af, socktype, proto, canonname, cres = result
         try:
@@ -543,11 +567,11 @@ def sendtelnet(ip, data):
 def main():
     args = sys.argv[1:]
     print("Netgear LBR20 Telnet enabler V2 LBR20(c) B.Kerler 2021")
-    ip =  b''
-    mac =  b''
-    username =  b''
+    ip = b''
+    mac = b''
+    username = b''
     password = b''
-    
+
     if len(args) > 2:
         ip = args[0]
         mac = args[1]
@@ -555,33 +579,35 @@ def main():
     if len(args) == 4:
         password = args[3]
 
-# Check if arguments have been pass in the wrong order, and/or if argument specifiers have been used
+    # Check if arguments have been pass in the wrong order, and/or if argument specifiers have been used
     for arg in args:
         if re.match("[0-9A-Fa-f]{2}([-:]?)[0-9A-Fa-f]{2}(\\1[0-9A-Fa-f]{2}){4}$", arg):
             mac = arg
-        elif re.match("\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b", arg):
+        elif re.match(
+                "\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b",
+                arg):
             ip = arg
-        elif re.match("(?i)mac:", arg): # Allow argument with target specifier (MAC:my mac address)
+        elif re.match("(?i)mac:", arg):  # Allow argument with target specifier (MAC:my mac address)
             mac = arg[4:]
-        elif re.match("(?i)ip:", arg): # (IP:myIP_address)
+        elif re.match("(?i)ip:", arg):  # (IP:myIP_address)
             ip = arg[3:]
-        elif re.match("(?i)pw:", arg): # (PW:mypassword)
+        elif re.match("(?i)pw:", arg):  # (PW:mypassword)
             password = arg[3:]
-        elif re.match("(?i)P:", arg): # (P:mypassword)
+        elif re.match("(?i)P:", arg):  # (P:mypassword)
             password = arg[2:]
-        elif re.match("(?i)U:", arg): # (U:myusername)
+        elif re.match("(?i)U:", arg):  # (U:myusername)
             username = arg[2:]
-        elif len(args) == 1: # If only 1 arg passed, and it's not IP or MAC, assume it's the password
+        elif len(args) == 1:  # If only 1 arg passed, and it's not IP or MAC, assume it's the password
             password = arg
 
-    if not mac: # Try to programmatically determined MAC
+    if not mac:  # Try to programmatically determined MAC
         look_for_ip = ip
-        if not  ip:
-             look_for_ip = "192.168.1.1" # test if default IP is in arp, and if so, set ip to default ip
-        if _platform == "win32" or _platform == "win64" :
+        if not ip:
+            look_for_ip = "192.168.1.1"  # test if default IP is in arp, and if so, set ip to default ip
+        if _platform == "win32" or _platform == "win64":
             with os.popen('arp -a') as f:
                 data = f.read()
-                for line in re.findall('([-.0-9]+)\s+([-0-9a-f]{17})\s+(\w+)',data):
+                for line in re.findall('([-.0-9]+)\s+([-0-9a-f]{17})\s+(\w+)', data):
                     if line[0] == look_for_ip:
                         mac = line[1]
                         ip = look_for_ip
@@ -591,31 +617,36 @@ def main():
             if ip in arp_table:
                 mac = arp_table[look_for_ip]
                 ip = look_for_ip
-# With the above code, user can just enter the password by itself and it will work if router has default configuration
-# Example Usage:
-# ./telnet-enable2.py mypassword
-# ./telnet-enable2.py P:mypassword
-# ### If router has non-standard configuration, additional arguments can be used
-# ./telnet-enable2.py P:mypassword 10.80.80.1
-# ./telnet-enable2.py 10.80.80.1 P:mypassword 
-# ./telnet-enable2.py 10.80.80.1 U:USERNAME P:mypassword
-# ./telnet-enable2.py a4-6b-b6-dd-2e-a8 10.80.80.1 P:mypassword
-# ./telnet-enable2.py 10.80.80.1 a4-6b-b6-dd-2e-a8 P:mypassword
-# ./telnet-enable2.py P:mypassword a4-6b-b6-dd-2e-a8 10.80.80.1
+    # With the above code, user can just enter the password by itself and it will work if router has default configuration
+    # Example Usage:
+    # ./telnet-enable2.py mypassword
+    # ./telnet-enable2.py P:mypassword
+    # ### If router has non-standard configuration, additional arguments can be used
+    # ./telnet-enable2.py P:mypassword 10.80.80.1
+    # ./telnet-enable2.py 10.80.80.1 P:mypassword
+    # ./telnet-enable2.py 10.80.80.1 U:USERNAME P:mypassword
+    # ./telnet-enable2.py a4-6b-b6-dd-2e-a8 10.80.80.1 P:mypassword
+    # ./telnet-enable2.py 10.80.80.1 a4-6b-b6-dd-2e-a8 P:mypassword
+    # ./telnet-enable2.py P:mypassword a4-6b-b6-dd-2e-a8 10.80.80.1
 
-    if not mac or not re.match("[0-9A-Fa-f]{2}([-:]?)[0-9A-Fa-f]{2}(\\1[0-9A-Fa-f]{2}){4}", mac) or not ip or not re.match("\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b", ip):
+    if not mac or not re.match("[0-9A-Fa-f]{2}([-:]?)[0-9A-Fa-f]{2}(\\1[0-9A-Fa-f]{2}){4}",
+                               mac) or not ip or not re.match(
+            "\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b", ip):
         print("Error: Argument error(s)!!!")
         if not ip:
             ip = '10.0.0.1'
             print("Error: Missing IP address.\n\tExample IP addresses:\t\t192.168.1.1\n\t\t\t\t\t10.80.80.1")
-        elif not re.match("\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b", ip):
-            print("Error: '" + ip + "' is not a valid IP address.\n\tExample IP addresses:\t\t192.168.1.1\n\t\t\t\t\t10.80.80.1")
+        elif not re.match(
+                "\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b", ip):
+            print(
+                "Error: '" + ip + "' is not a valid IP address.\n\tExample IP addresses:\t\t192.168.1.1\n\t\t\t\t\t10.80.80.1")
             ip = '<valid-IP>'
         if not mac:
             mac = 'D4-3F-CB-E9-29-14'
             print("Warn: Missing MAC address.\n\tExample MAC's:\t\t\tA4-6B-B6-DD-2E-A8\n\t\t\t\t\ta4-6b-b6-dd-2e-a8")
         elif not re.match("[0-9A-Fa-f]{2}([-:]?)[0-9A-Fa-f]{2}(\\1[0-9A-Fa-f]{2}){4}", mac):
-            print("Error: '" + mac + "' is not a valid MAC address.\n\tExample MAC's:\t\t\tA4-6B-B6-DD-2E-A8\n\t\t\t\t\ta4-6b-b6-dd-2e-a8")
+            print(
+                "Error: '" + mac + "' is not a valid MAC address.\n\tExample MAC's:\t\t\tA4-6B-B6-DD-2E-A8\n\t\t\t\t\ta4-6b-b6-dd-2e-a8")
             mac = '<valid-MAC>'
         if not username:
             username = 'admin'
@@ -628,15 +659,12 @@ def main():
         sys.exit(1)
 
     if not username and len(password) > 0:
-        username = "admin" # Most devices only allows 'admin' as the username
-
+        username = "admin"  # Most devices only allows 'admin' as the username
+    mac = mac.replace(":", "").replace("-", "").upper()
     hash = genhash(mac, username, password)
+    # pw = hashtest(mac,username,password,hash)
     if sendtelnet(ip, hash):
         print(f"Done sending pw data to {ip}:23")
-    hashed_pw=sha256(password.encode('utf-8')).hexdigest().upper()
-    hash = genhash(mac, username, hashed_pw)
-    if sendtelnet(ip, hash):
-        print(f"Done sending hashed_pw data to {ip}:23")
 
 
 if __name__ == '__main__':
