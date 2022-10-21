@@ -547,7 +547,24 @@ def genhash2(mac, username, password=''):
     return rdata
 
 
-def hashtest(mac, username, password, payload):
+def hashtest1(mac, username, password, payload):
+    secret_key = ('AMBIT_TELNET_ENABLE+' + password)[:0x80]
+    cipher = Blowfish(secret_key.encode('utf8'), byte_order="little")
+    rdata = b"".join(cipher.decrypt_ecb(payload))
+    md5_key = md5(rdata[0x10:]).digest()
+    if rdata[:0x10] != md5_key:
+        print("Error md5")
+    if mac != rdata[0x10:0x10 + (6 * 2)].decode('utf-8'):
+        print("Error mac")
+    rusername = rdata[0x20:0x30].rstrip(b"\x00").decode('utf-8')
+    if username != rusername[:len(username)]:
+        print("Error username")
+    pwd = rdata[0x30:0x50].rstrip(b"\x00").decode('utf-8')
+    if password != pwd:
+        print("Error pw digest")
+
+
+def hashtest2(mac, username, password, payload):
     secret_key = ('AMBIT_TELNET_ENABLE+' + password)[:0x80]
     cipher = Blowfish(secret_key.encode('utf8'), byte_order="little")
     rdata = b"".join(cipher.decrypt_ecb(payload))
@@ -563,7 +580,6 @@ def hashtest(mac, username, password, payload):
     hashed_pw = sha256(password.encode('utf-8')).hexdigest().lower()
     if hashed_pw != pwd_digest:
         print("Error pw digest")
-    print("All ok")
 
 
 def sendtelnet(ip, data):
@@ -691,7 +707,7 @@ def main():
         username = "admin"  # Most devices only allows 'admin' as the username
     mac = mac.replace(":", "").replace("-", "").upper()
     hash = genhash1(mac, username, password)
-    # pw = hashtest(mac,username,password,hash)
+    hashtest1(mac,username,password,hash)
     if sendtelnet(ip, hash):
         print(f"Done sending pw data to {ip}:23")
     hashed_pw = sha256(password.encode('utf-8')).hexdigest().lower()
@@ -699,9 +715,9 @@ def main():
     if sendtelnet(ip, hash2):
         print(f"Done sending hashed pw data to {ip}:23")
     hash3 = genhash2(mac, username, password)
-    # pw = hashtest(mac,username,password,hash)
+    hashtest2(mac,username,password,hash3)
     if sendtelnet(ip, hash3):
-        print(f"Done sending pw data to {ip}:23")
+        print(f"Done sending new pw data to {ip}:23")
 
 if __name__ == '__main__':
     main()
