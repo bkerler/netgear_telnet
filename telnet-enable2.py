@@ -485,7 +485,36 @@ def ByteSwap(data):
     return a.tobytes()
 
 
-def genhash(mac, username, password=''):
+def genhash1(mac, username, password=''):
+    # eventually reformat mac
+    mac = mac.replace(':', '').upper()
+
+    # Pad the input correctly
+    assert (len(mac) < 0x10)
+    just_mac = mac.encode('utf8').ljust(0x10, b'\x00')
+
+    assert (len(username) <= 0x10)
+    just_username = username.encode('utf8').ljust(0x10, b'\x00')
+
+    assert (len(password) <= 0x50)
+    just_password = password.encode('utf8').ljust(0x50, b'\x00')
+
+    cleartext = (just_mac + just_username + just_password).ljust(0x70, b'\x00')
+    # print(hexlify(cleartext).decode('utf-8'))
+    md5_key = md5(cleartext).digest()
+    # print("MD5:"+hexlify(md5_key).decode('utf-8'))
+    payload = (md5_key + cleartext).ljust(0xB0, b'\x00')
+    # print("Payload: " + hexlify(payload).decode('utf-8'))
+
+    secret_key = ('AMBIT_TELNET_ENABLE+' + password)[:0x80]
+    # print("Key: "+secret_key)
+
+    cipher = Blowfish(secret_key.encode('utf8'), byte_order="little")
+    rdata = b"".join(cipher.encrypt_ecb(payload))
+    # print(hexlify(rdata).decode('utf-8'))
+    return rdata
+
+def genhash2(mac, username, password=''):
     # eventually reformat mac
     mac = mac.replace(':', '').upper()
 
@@ -661,14 +690,18 @@ def main():
     if not username and len(password) > 0:
         username = "admin"  # Most devices only allows 'admin' as the username
     mac = mac.replace(":", "").replace("-", "").upper()
-    hash = genhash(mac, username, password)
+    hash = genhash1(mac, username, password)
     # pw = hashtest(mac,username,password,hash)
     if sendtelnet(ip, hash):
         print(f"Done sending pw data to {ip}:23")
     hashed_pw = sha256(password.encode('utf-8')).hexdigest().lower()
-    hash2 = genhash(mac, username, hashed_pw)
+    hash2 = genhash1(mac, username, hashed_pw)
     if sendtelnet(ip, hash2):
         print(f"Done sending hashed pw data to {ip}:23")
+    hash3 = genhash2(mac, username, password)
+    # pw = hashtest(mac,username,password,hash)
+    if sendtelnet(ip, hash3):
+        print(f"Done sending pw data to {ip}:23")
 
 if __name__ == '__main__':
     main()
