@@ -1,5 +1,5 @@
 # Netgear Enable Telnet (New Crypto) for Netgear Orbi LBR20 (possibly works for others in the Orbi famlily and beyond)
-(c) B.Kerler 2021
+(c) B.Kerler 2021-2022
 Licensed under MIT License
 
 ## Installation
@@ -8,21 +8,27 @@ Licensed under MIT License
 ## Usage :
 
 ```bash
-./telnet-enable2.py <ip> <mac> <username> [<password>]
+./telnet-enable2.py <ip> <mac> <username> ["<password>"]
 ```
 Ex:
 ```
-./telnet-enable2.py 192.168.1.1 A0:40:A0:69:B6:30 admin <yourpass>
+./telnet-enable2.py 192.168.1.1 A0:40:A0:69:B6:30 admin "mypassword"
 ```
+
 - ip is usually 192.168.1.1
-- mac is mac of br0 interface
+- mac is mac of br0 interface (In the Orbi web setup: Advanced / Advanced Home / Router Information / MAC Address)
 - username is usually "admin"
-- password is your unhashed Web GUI password
+- password is your unhashed Web GUI password. Use quotes if password 
+  includes ampersand or parenthesis
 
 ## Confirmed to Work on:
 
 - Orbi LBR20
 - Orbi RBR40 (v2.7.3.22)
+
+## Prepared but untested:
+- Orbi NBR750 (V1.5.43+r49254)
+- Orbi RBR760 (V6.3.1.0)
 
 ## Credits :
 - https://github.com/jashandeep-sohi/python-blowfish (Sorry, I had to mod your blowfish)

@@ -665,7 +665,10 @@ def main():
     # pw = hashtest(mac,username,password,hash)
     if sendtelnet(ip, hash):
         print(f"Done sending pw data to {ip}:23")
-
+    hashed_pw = sha256(password.encode('utf-8')).hexdigest().lower()
+    hash2 = genhash(mac, username, hashed_pw)
+    if sendtelnet(ip, hash2):
+        print(f"Done sending hashed pw data to {ip}:23")
 
 if __name__ == '__main__':
     main()
