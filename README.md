@@ -19,6 +19,10 @@ Ex:
 - username is usually "admin"
 - password is your unhashed Web GUI password
 
+## Confirmed to Work on:
+
+- Orbi LBR20
+- Orbi RBR40 (v2.7.3.22)
 
 ## Credits :
 - https://github.com/jashandeep-sohi/python-blowfish (Sorry, I had to mod your blowfish)
