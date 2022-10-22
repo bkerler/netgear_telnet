@@ -501,7 +501,7 @@ def genhash1(mac, username, password=''):
 
     cleartext = (just_mac + just_username + just_password).ljust(0x70, b'\x00')
     # print(hexlify(cleartext).decode('utf-8'))
-    md5_key = md5(cleartext).digest()
+    md5_key = md5(cleartext[:0x70]).digest()
     # print("MD5:"+hexlify(md5_key).decode('utf-8'))
     payload = (md5_key + cleartext).ljust(0xB0, b'\x00')
     # print("Payload: " + hexlify(payload).decode('utf-8'))
@@ -528,14 +528,11 @@ def genhash2(mac, username, password=''):
     assert (len(username) <= 0x10)
     hashed_pw = bytes(sha256(password.encode('utf-8')).hexdigest().lower(), 'utf-8').ljust(0x30, b'\x00')
 
-    assert (len(password) <= 0x50)
-    just_password = password.encode('utf8').ljust(0x50, b'\x00')
-
-    cleartext = (just_mac + just_username + hashed_pw + just_password).ljust(0x70, b'\x00')
+    cleartext = (just_mac + just_username + hashed_pw).ljust(0x70, b'\x00')
     # print(hexlify(cleartext).decode('utf-8'))
-    md5_key = md5(cleartext).digest()
+    md5_key = md5(cleartext[:0x70]).digest()
     # print("MD5:"+hexlify(md5_key).decode('utf-8'))
-    payload = (md5_key + cleartext).ljust(0xB0, b'\x00')
+    payload = (md5_key + cleartext[:0x70]).ljust(0xB0, b'\x00')
     # print("Payload: " + hexlify(payload).decode('utf-8'))
 
     secret_key = ('AMBIT_TELNET_ENABLE+' + password)[:0x80]
@@ -551,7 +548,7 @@ def hashtest1(mac, username, password, payload):
     secret_key = ('AMBIT_TELNET_ENABLE+' + password)[:0x80]
     cipher = Blowfish(secret_key.encode('utf8'), byte_order="little")
     rdata = b"".join(cipher.decrypt_ecb(payload))
-    md5_key = md5(rdata[0x10:]).digest()
+    md5_key = md5(rdata[0x10:][:0x70]).digest()
     if rdata[:0x10] != md5_key:
         print("Error md5")
     if mac != rdata[0x10:0x10 + (6 * 2)].decode('utf-8'):
@@ -568,7 +565,7 @@ def hashtest2(mac, username, password, payload):
     secret_key = ('AMBIT_TELNET_ENABLE+' + password)[:0x80]
     cipher = Blowfish(secret_key.encode('utf8'), byte_order="little")
     rdata = b"".join(cipher.decrypt_ecb(payload))
-    md5_key = md5(rdata[0x10:]).digest()
+    md5_key = md5(rdata[0x10:][:0x70]).digest()
     if rdata[:0x10] != md5_key:
         print("Error md5")
     if mac != rdata[0x10:0x10 + (6 * 2)].decode('utf-8'):
@@ -710,13 +707,9 @@ def main():
     hashtest1(mac,username,password,hash)
     if sendtelnet(ip, hash):
         print(f"Done sending pw data to {ip}:23")
-    hashed_pw = sha256(password.encode('utf-8')).hexdigest().lower()
-    hash2 = genhash1(mac, username, hashed_pw)
+    hash2 = genhash2(mac, username, password)
+    hashtest2(mac,username,password,hash2)
     if sendtelnet(ip, hash2):
-        print(f"Done sending hashed pw data to {ip}:23")
-    hash3 = genhash2(mac, username, password)
-    hashtest2(mac,username,password,hash3)
-    if sendtelnet(ip, hash3):
         print(f"Done sending new pw data to {ip}:23")
 
 if __name__ == '__main__':
