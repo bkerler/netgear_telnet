@@ -504,22 +504,22 @@ def genhash(mac, username, password='', mode=1):
     # print("MD5:"+hexlify(md5_key).decode('utf-8'))
     payload = (md5_key + cleartext[:0x70]).ljust(0xB0, b'\x00')
     # print("Payload: " + hexlify(payload).decode('utf-8'))
-    if mode==1:
+    if mode==2:
         spassword = sha256(bytes(password,'utf-8')).hexdigest().lower()
-    elif mode==2:
+    elif mode==1:
         spassword = password
     secret_key = ('AMBIT_TELNET_ENABLE+' + spassword)[:0x80]
 
     cipher = Blowfish(secret_key.encode('utf8'), byte_order="little")
     rdata = b"".join(cipher.encrypt_ecb(payload))
-    # print(hexlify(rdata).decode('utf-8'))
+    print(hexlify(rdata).decode('utf-8'))
     return rdata
 
 
 def hashtest(mac, username, password, payload, mode=1):
-    if mode==1:
+    if mode==2:
         spassword = sha256(bytes(password,'utf-8')).hexdigest().lower()
-    elif mode==2:
+    elif mode==1:
         spassword = password
     secret_key = ('AMBIT_TELNET_ENABLE+' + spassword)[:0x80]
     cipher = Blowfish(secret_key.encode('utf8'), byte_order="little")
@@ -670,7 +670,6 @@ def main():
     if sendtelnet(ip, hash):
         print(f"Done sending pw data to {ip}:23")
     hash2 = genhash(mac, username, password, mode=2)
-    print(hash2.hex())
     hashtest(mac, username, password, hash2, mode=2)
     if sendtelnet(ip, hash2):
         print(f"Done sending new pw data to {ip}:23")
