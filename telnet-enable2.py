@@ -502,29 +502,33 @@ def genhash(mac, username, password='', mode=1):
     # print(hexlify(cleartext).decode('utf-8'))
     md5_key = md5(cleartext[:0x70]).digest()
     # print("MD5:"+hexlify(md5_key).decode('utf-8'))
+    if mode==3:
+        md5_key = md5_key[4:4+(4*4)] + b"\x00"*4
     payload = (md5_key + cleartext[:0x70]).ljust(0xB0, b'\x00')
-    # print("Payload: " + hexlify(payload).decode('utf-8'))
+    #print("Payload: " + hexlify(payload).decode('utf-8'))
     if mode==2:
         spassword = sha256(bytes(password,'utf-8')).hexdigest().lower()
-    elif mode==1:
+    elif mode in [1,3]:
         spassword = password
     secret_key = ('AMBIT_TELNET_ENABLE+' + spassword)[:0x80]
 
     cipher = Blowfish(secret_key.encode('utf8'), byte_order="little")
     rdata = b"".join(cipher.encrypt_ecb(payload))
-    print(hexlify(rdata).decode('utf-8'))
+    #print(hexlify(rdata).decode('utf-8'))
     return rdata
 
 
 def hashtest(mac, username, password, payload, mode=1):
     if mode==2:
         spassword = sha256(bytes(password,'utf-8')).hexdigest().lower()
-    elif mode==1:
+    elif mode in [1,3]:
         spassword = password
     secret_key = ('AMBIT_TELNET_ENABLE+' + spassword)[:0x80]
     cipher = Blowfish(secret_key.encode('utf8'), byte_order="little")
     rdata = b"".join(cipher.decrypt_ecb(payload))
     md5_key = md5(rdata[0x10:][:0x70]).digest()
+    if mode==3:
+        md5_key = md5_key[4:4+(4*4)] + b"\x00"*4
     if rdata[:0x10] != md5_key:
         print("Error md5")
     if mac != rdata[0x10:0x10 + (6 * 2)].decode('utf-8'):
@@ -578,9 +582,10 @@ def main():
     if len(args) > 2:
         ip = args[0]
         mac = args[1]       # lan_hwaddr
-        username = args[2]  # http_username
+        username = args[2]  # "admin" / http_username
     if len(args) == 4:
-        password = args[3]  # http_passwd
+        password = args[3]  # http_passwd / http_passwd_hashed / /tmp/cache/telnetenable/httpwd
+                            # limited to length 0x7F (RBR760), (http_passwd_digest for blowfishkey)
 
     # Check if arguments have been pass in the wrong order, and/or if argument specifiers have been used
     for arg in args:
@@ -672,7 +677,11 @@ def main():
     hash2 = genhash(mac, username, password, mode=2)
     hashtest(mac, username, password, hash2, mode=2)
     if sendtelnet(ip, hash2):
-        print(f"Done sending new pw data to {ip}:23")
+        print(f"Done sending new (nbr750) pw data to {ip}:23")
+    hash3 = genhash(mac, username, password, mode=3)
+    hashtest(mac, username, password, hash3, mode=3)
+    if sendtelnet(ip, hash3):
+        print(f"Done sending new2 (RBR760) pw data to {ip}:23")
 
 if __name__ == '__main__':
     main()
