@@ -27,9 +27,10 @@ Ex:
 - Orbi RBR40 (v2.7.3.22)
 
 ## Prepared but untested:
-- Orbi NBR750 (V1.5.43+r49254)
 - Orbi RBR760 (V6.3.1.0)
+- Orbi NBR750 (V1.5.43+r49254)
 - Orbi RBR850 (V4.6.9.11_2.3.5)
+- Orbi RBRE960 (V6.0.3.85)
 
 ## Credits :
 - https://github.com/jashandeep-sohi/python-blowfish (Sorry, I had to mod your blowfish)
