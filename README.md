@@ -25,7 +25,8 @@ Ex:
 
 - Orbi LBR20
 - Orbi RBR40 (v2.7.3.22)
-
+- Orbi AX12 / RAX120v2 V1.2.8.40
+ 
 ## Prepared but untested:
 - Orbi RBR760 (V6.3.1.0)
 - Orbi NBR750 (V1.5.43+r49254)
