@@ -551,6 +551,7 @@ def sendtelnet(ip, data):
             continue
 
         try:
+            conn.settimeout(5)
             conn.connect(cres)
         except socket.error:
             conn.close()
@@ -563,12 +564,15 @@ def sendtelnet(ip, data):
         sys.exit(0)
     else:
         conn.send(data)
-        retval = conn.recvfrom(1024)
-        conn.close()
-        if b"ACK" in retval:
-            return True
-        else:
+        try:
+            retval = conn.recvfrom(1024)
+            conn.close()
+            if b"ACK" in retval:
+                return True
+        except:
+            conn.close()
             return False
+        return False        
 
 
 def main():
