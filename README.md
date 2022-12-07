@@ -26,7 +26,7 @@ Ex:
 - Orbi LBR20
 - Orbi RBR40 (v2.7.3.22)
 - Nighthawk AX12 / RAX120v2 V1.2.8.40
-- Nighthawk RAX75 V1.0.1.58_1.0.24
+- Nighthawk RAX75 V1.0.1.58_1.0.24, V1.0.10.140_1.0.79
  
 ## Prepared but untested:
 - Orbi RBR760 (V6.3.1.0)
