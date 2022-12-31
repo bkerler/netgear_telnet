@@ -24,14 +24,14 @@ Ex:
 ## Confirmed to Work on:
 
 - Orbi LBR20
-- Orbi RBR40 (v2.7.3.22)
+- Orbi RBR40 v2.7.3.22
 - Orbi RBRE960 v6.0.3.85 - v6.3.7.5
 - Nighthawk AX12 / RAX120v2 V1.2.8.40
 - Nighthawk RAX75 V1.0.1.58_1.0.24, V1.0.10.140_1.0.79
+- Orbi NBR750 V4.6.5.11_1.5.43+r49254 - V4.6.5.11_1.5.66
 
 ## Prepared but untested:
 - Orbi RBR760 (V6.3.1.0)
-- Orbi NBR750 (V1.5.43+r49254)
 - Orbi RBR850 (V4.6.9.11_2.3.5)
 
 ## Credits :
