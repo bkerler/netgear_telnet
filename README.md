@@ -29,10 +29,11 @@ Ex:
 - Nighthawk AX12 / RAX120v2 V1.2.8.40
 - Nighthawk RAX75 V1.0.1.58_1.0.24, V1.0.10.140_1.0.79
 - Orbi NBR750 V4.6.5.11_1.5.43+r49254 - V4.6.5.11_1.5.66
+- Orbi RBR850 V4.6.9.11_2.3.5 - V4.6.14.3_2.3.12
 
 ## Prepared but untested:
 - Orbi RBR760 (V6.3.1.0)
-- Orbi RBR850 (V4.6.9.11_2.3.5)
+
 
 ## Credits :
 - https://github.com/jashandeep-sohi/python-blowfish (Sorry, I had to mod your blowfish)
