@@ -1,5 +1,5 @@
 # Netgear Enable Telnet (New Crypto) for Netgear Orbi LBR20 (possibly works for others in the Orbi famlily and beyond)
-(c) B.Kerler 2021-2022
+(c) B.Kerler 2021-2023
 Licensed under MIT License
 
 ## Installation
