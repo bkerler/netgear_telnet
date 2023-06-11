@@ -496,35 +496,25 @@ def genhash(mac, username, password='', mode=1):
     assert (len(username) <= 0x10)
     just_username = username.encode('utf8').ljust(0x10, b'\x00')
 
-    if mode==4:
+    if mode==2:
+        spassword = sha256(bytes(password,'utf-8')).hexdigest().lower()
+    elif mode==4:
         spassword = sha256(bytes(password,'utf-8')).hexdigest().upper()
-        hashed_pw = spassword.encode('utf-8').ljust(0x88, b'\x00')
-    else:
-        assert (len(password) <= 0x10)
-        hashed_pw = password.encode('utf-8').ljust(0x30, b'\x00')
-
-    if mode==4:
-        cleartext = (just_mac + just_username + hashed_pw).ljust(0xE8, b'\x00')
-    else:
-        cleartext = (just_mac + just_username + hashed_pw).ljust(0x70, b'\x00')
+        password = spassword
+    assert (len(password) <= 0x40)
+    hashed_pw = password.encode('utf-8').ljust(0x50, b'\x00')
+    cleartext = (just_mac + just_username + hashed_pw).ljust(0x70, b'\x00')
     # print(hexlify(cleartext).decode('utf-8'))
     md5_key = md5(cleartext[:0x70]).digest()
     # print("MD5:"+hexlify(md5_key).decode('utf-8'))
     if mode==3:
         md5_key = md5_key[4:4+(4*4)] + b"\x00"*4
-    if mode==4:
-        payload = (md5_key + cleartext[:0xE8]).ljust(0xF8, b'\x00')
-    else:
-        payload = (md5_key + cleartext[:0x70]).ljust(0xB0, b'\x00')
+    payload = (md5_key + cleartext[:0x70]).ljust(0xB0, b'\x00')
     #print("Payload: " + hexlify(payload).decode('utf-8'))
-    if mode==2:
-        spassword = sha256(bytes(password,'utf-8')).hexdigest().lower()
-    elif mode in [1,3]:
-        spassword = password
-    if mode==4:
+    if mode in [1,3]:
+        secret_key = ('AMBIT_TELNET_ENABLE+' + password)[:0x80].encode('utf8')
+    elif mode in [2,4]:
         secret_key = ('AMBIT_TELNET_ENABLE+' + spassword).encode('utf8').ljust(0x100, b'\x00')
-    else:
-        secret_key = ('AMBIT_TELNET_ENABLE+' + spassword)[:0x80].encode('utf8')
 
     cipher = Blowfish(secret_key, byte_order="little")
     rdata = b"".join(cipher.encrypt_ecb(payload))
@@ -602,7 +592,7 @@ def sendtelnet(ip, data):
 
 def main():
     args = sys.argv[1:]
-    print("Netgear LBR20 Telnet enabler V2 LBR20(c) B.Kerler 2021")
+    print("Netgear Telnet enabler V3 (c) B.Kerler 2021-2023")
     ip = b''
     mac = b''
     username = b''
@@ -706,7 +696,7 @@ def main():
     hash2 = genhash(mac, username, password, mode=2)
     hashtest(mac, username, password, hash2, mode=2)
     if sendtelnet(ip, hash2):
-        print(f"Done sending new (nbr750) pw data to {ip}:23")
+        print(f"Done sending new (NBR750) pw data to {ip}:23")
     hash3 = genhash(mac, username, password, mode=3)
     hashtest(mac, username, password, hash3, mode=3)
     if sendtelnet(ip, hash3):
@@ -714,7 +704,7 @@ def main():
     hash4 = genhash(mac, username, password, mode=4)
     hashtest(mac, username, password, hash4, mode=4)
     if sendtelnet(ip, hash4):
-        print(f"Done sending new3 pw data to {ip}:23")
+        print(f"Done sending new3 (RAX10/RAX50) pw data to {ip}:23")
 
 if __name__ == '__main__':
     main()
