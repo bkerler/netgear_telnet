@@ -485,6 +485,7 @@ def ByteSwap(data):
     a.byteswap()
     return a.tobytes()
 
+
 def genhash(mac, username, password='', mode=1):
     # eventually reformat mac
     mac = mac.replace(':', '').upper()
@@ -496,10 +497,10 @@ def genhash(mac, username, password='', mode=1):
     assert (len(username) <= 0x10)
     just_username = username.encode('utf8').ljust(0x10, b'\x00')
 
-    if mode==2:
-        spassword = sha256(bytes(password,'utf-8')).hexdigest().lower()
-    elif mode==4:
-        spassword = sha256(bytes(password,'utf-8')).hexdigest().upper()
+    if mode == 2:
+        spassword = sha256(bytes(password, 'utf-8')).hexdigest().lower()
+    elif mode == 4:
+        spassword = sha256(bytes(password, 'utf-8')).hexdigest().upper()
         password = spassword
     assert (len(password) <= 0x40)
     hashed_pw = password.encode('utf-8').ljust(0x50, b'\x00')
@@ -507,38 +508,38 @@ def genhash(mac, username, password='', mode=1):
     # print(hexlify(cleartext).decode('utf-8'))
     md5_key = md5(cleartext[:0x70]).digest()
     # print("MD5:"+hexlify(md5_key).decode('utf-8'))
-    if mode==3:
-        md5_key = md5_key[4:4+(4*4)] + b"\x00"*4
+    if mode == 3:
+        md5_key = md5_key[4:4 + (4 * 4)] + b"\x00" * 4
     payload = (md5_key + cleartext[:0x70]).ljust(0xB0, b'\x00')
-    #print("Payload: " + hexlify(payload).decode('utf-8'))
-    if mode in [1,3]:
+    # print("Payload: " + hexlify(payload).decode('utf-8'))
+    if mode in [1, 3]:
         secret_key = ('AMBIT_TELNET_ENABLE+' + password)[:0x80].encode('utf8')
-    elif mode in [2,4]:
+    elif mode in [2, 4]:
         secret_key = ('AMBIT_TELNET_ENABLE+' + spassword).encode('utf8').ljust(0x100, b'\x00')
 
     cipher = Blowfish(secret_key, byte_order="little")
     rdata = b"".join(cipher.encrypt_ecb(payload))
-    #print(hexlify(rdata).decode('utf-8'))
+    # print(hexlify(rdata).decode('utf-8'))
     return rdata
 
 
 def hashtest(mac, username, password, payload, mode=1):
-    if mode==2:
-        spassword = sha256(bytes(password,'utf-8')).hexdigest().lower()
-    elif mode in [1,3]:
+    if mode == 2:
+        spassword = sha256(bytes(password, 'utf-8')).hexdigest().lower()
+    elif mode in [1, 3]:
         spassword = password
-    elif mode==4:
-        spassword = sha256(bytes(password,'utf-8')).hexdigest().upper()
+    elif mode == 4:
+        spassword = sha256(bytes(password, 'utf-8')).hexdigest().upper()
 
-    if mode==4:
+    if mode == 4:
         secret_key = ('AMBIT_TELNET_ENABLE+' + spassword)[:0x100]
     else:
         secret_key = ('AMBIT_TELNET_ENABLE+' + spassword)[:0x80]
     cipher = Blowfish(secret_key.encode('utf8'), byte_order="little")
     rdata = b"".join(cipher.decrypt_ecb(payload))
     md5_key = md5(rdata[0x10:][:0x70]).digest()
-    if mode==3:
-        md5_key = md5_key[4:4+(4*4)] + b"\x00"*4
+    if mode == 3:
+        md5_key = md5_key[4:4 + (4 * 4)] + b"\x00" * 4
     if rdata[:0x10] != md5_key:
         print("Error md5")
     if mac != rdata[0x10:0x10 + (6 * 2)].decode('utf-8'):
@@ -546,7 +547,7 @@ def hashtest(mac, username, password, payload, mode=1):
     rusername = rdata[0x20:0x30].rstrip(b"\x00").decode('utf-8')
     if username != rusername[:len(username)]:
         print("Error username")
-    if mode==4:
+    if mode == 4:
         spwd = rdata[0x30:0xB8].rstrip(b"\x00").decode('utf-8')
         if spassword != spwd:
             print("Error pw digest")
@@ -554,6 +555,7 @@ def hashtest(mac, username, password, payload, mode=1):
         pwd = rdata[0x30:0x50].rstrip(b"\x00").decode('utf-8')
         if password != pwd:
             print("Error pw digest")
+
 
 def sendtelnet(ip, data):
     port = 23
@@ -587,7 +589,7 @@ def sendtelnet(ip, data):
         except:
             conn.close()
             return False
-        return False        
+        return False
 
 
 def main():
@@ -600,11 +602,11 @@ def main():
 
     if len(args) > 2:
         ip = args[0]
-        mac = args[1]       # lan_hwaddr
+        mac = args[1]  # lan_hwaddr
         username = args[2]  # "admin" / http_username
     if len(args) == 4:
         password = args[3]  # http_passwd / http_passwd_hashed / /tmp/cache/telnetenable/httpwd
-                            # limited to length 0x7F (RBR760), (http_passwd_digest for blowfishkey)
+        # limited to length 0x7F (RBR760), (http_passwd_digest for blowfishkey)
 
     # Check if arguments have been pass in the wrong order, and/or if argument specifiers have been used
     for arg in args:
@@ -658,7 +660,7 @@ def main():
 
     if not mac or not re.match("[0-9A-Fa-f]{2}([-:]?)[0-9A-Fa-f]{2}(\\1[0-9A-Fa-f]{2}){4}",
                                mac) or not ip or not re.match(
-            "\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b", ip):
+        "\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b", ip):
         print("Error: Argument error(s)!!!")
         if not ip:
             ip = '10.0.0.1'
@@ -705,6 +707,7 @@ def main():
     hashtest(mac, username, password, hash4, mode=4)
     if sendtelnet(ip, hash4):
         print(f"Done sending new3 (RAX10/RAX50) pw data to {ip}:23")
+
 
 if __name__ == '__main__':
     main()
