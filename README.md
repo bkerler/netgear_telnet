@@ -24,6 +24,7 @@ Ex:
 ## Confirmed to Work on:
 
 - Orbi LBR20
+- Orbi 960 series v6.3.7.10
 - Orbi RBR40 v2.7.3.22
 - Orbi RBRE960 v6.0.3.85 - v6.3.7.5
 - AX1800 / RAX10 V1.0.14.134
