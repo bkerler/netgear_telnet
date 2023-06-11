@@ -26,6 +26,8 @@ Ex:
 - Orbi LBR20
 - Orbi RBR40 v2.7.3.22
 - Orbi RBRE960 v6.0.3.85 - v6.3.7.5
+- AX1800 / RAX10 V1.0.14.134
+- Nighthawk AX6 / RAX50 V1.0.12.120_2.0.83
 - Nighthawk AX12 / RAX120v2 V1.2.8.40
 - Nighthawk RAX75 V1.0.1.58_1.0.24, V1.0.10.140_1.0.79
 - Orbi NBR750 V4.6.5.11_1.5.43+r49254 - V4.6.14.3+r49254
