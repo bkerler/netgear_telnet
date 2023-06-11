@@ -26,9 +26,10 @@ def get_arp_table_darwin():
     """
 
     arp_data_re = re.compile(
-        r'^\S+ \((?P<ip_address>[^\)]+)\) at (?P<hw_address>(?:[0-9a-f]{2}:){5}(?:[0-9a-f]{2})) on (?P<device>\S+) ifscope \[(?P<type>\S+)\]$')
+        r'^\S+ \((?P<ip_address>[^\)]+)\) at (?P<hw_address>(?:[0-9a-f]{1,2}:){5}(?:[0-9a-f]{1,2})) on (?P<device>\S+) ifscope (permanent )?\[(?P<type>\S+)\]$')
 
-    arp_data_raw = subprocess.check_output(['arp', '-a', '-n']).split("\n")[:-1]
+    arp_data_raw = subprocess.check_output(
+        ['arp', '-a', '-n']).decode('utf-8').split("\n")[:-1]
     parsed_arp_table = (arp_data_re.match(i).groupdict() for i in arp_data_raw)
 
     return {d['ip_address']: d['hw_address'] for d in parsed_arp_table}
