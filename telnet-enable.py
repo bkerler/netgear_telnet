@@ -497,11 +497,6 @@ def genhash(mac, username, password='', mode=1):
     assert (len(username) <= 0x10)
     just_username = username.encode('utf8').ljust(0x10, b'\x00')
 
-    if mode == 2:
-        spassword = sha256(bytes(password, 'utf-8')).hexdigest().lower()
-    elif mode == 4:
-        spassword = sha256(bytes(password, 'utf-8')).hexdigest().upper()
-        password = spassword
     assert (len(password) <= 0x40)
     hashed_pw = password.encode('utf-8').ljust(0x50, b'\x00')
     cleartext = (just_mac + just_username + hashed_pw).ljust(0x70, b'\x00')
@@ -510,12 +505,12 @@ def genhash(mac, username, password='', mode=1):
     # print("MD5:"+hexlify(md5_key).decode('utf-8'))
     if mode == 3:
         md5_key = md5_key[4:4 + (4 * 4)] + b"\x00" * 4
-    payload = (md5_key + cleartext[:0x70]).ljust(0xB0, b'\x00')
-    # print("Payload: " + hexlify(payload).decode('utf-8'))
-    if mode in [1, 3]:
-        secret_key = ('AMBIT_TELNET_ENABLE+' + password)[:0x80].encode('utf8')
-    elif mode in [2, 4]:
-        secret_key = ('AMBIT_TELNET_ENABLE+' + spassword).encode('utf8').ljust(0x100, b'\x00')
+    payload = (md5_key + cleartext[:0x70]).ljust(0xF8, b'\x00')
+    #print("Payload: " + hexlify(payload).decode('utf-8'))
+    if mode == 2:
+        secret_key = ('AMBIT_TELNET_ENABLE+' + sha256(bytes(password, 'utf-8')).hexdigest().lower()).encode('utf8').ljust(0x100, b'\x00')
+    else:
+        secret_key = ('AMBIT_TELNET_ENABLE+' + password).encode('utf8')
 
     cipher = Blowfish(secret_key, byte_order="little")
     rdata = b"".join(cipher.encrypt_ecb(payload))
@@ -524,7 +519,7 @@ def genhash(mac, username, password='', mode=1):
 
 
 def hashtest(mac, username, password, payload, mode=1):
-    if mode == 2:
+    if mode in [2,5]:
         spassword = sha256(bytes(password, 'utf-8')).hexdigest().lower()
     elif mode in [1, 3]:
         spassword = password
@@ -547,7 +542,7 @@ def hashtest(mac, username, password, payload, mode=1):
     rusername = rdata[0x20:0x30].rstrip(b"\x00").decode('utf-8')
     if username != rusername[:len(username)]:
         print("Error username")
-    if mode == 4:
+    if mode >= 4:
         spwd = rdata[0x30:0xB8].rstrip(b"\x00").decode('utf-8')
         if spassword != spwd:
             print("Error pw digest")
@@ -591,10 +586,36 @@ def sendtelnet(ip, data):
             return False
         return False
 
+def selftest():
+    #key = bytes.fromhex("414d4249545f54454c4e45545f454e41424c452b61376339306432613964306162643832666239326163376137313234636333623764333337316630626136643862613364643566643566396234393962363066")
+    #data = bytes.fromhex("50b10894c9f109e6d77381a9048985444338394534333439373341360000000061646d696e00000000000000000000006137633930643261396430616264383266623932616337613731323463633362376433333731663062613664386261336464356664356639623439396236306600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
+    #cipher = Blowfish(key, byte_order="little")
+    #rdata = b"".join(cipher.encrypt_ecb(data))
+    #print(rdata.hex())
+
+    mac = 'C89E434973A6'
+    password = 'Excitedstreet320'
+    username = 'admin'
+    digest = genhash(mac,username,password,mode=1)
+    hashtest(mac, username, password, digest, mode=1)
+    # RBR760
+    digest = genhash(mac, username, password, mode=3)
+    hashtest(mac, username, password, digest, mode=3)
+    # NBR750
+    digest = genhash(mac, username, password, mode=2)
+    hashtest(mac, username, password, digest, mode=2)
+    # RAX10/RAX50
+    digest = genhash(mac, username, sha256(bytes(password, 'utf-8')).hexdigest().upper(), mode=4)
+    hashtest(mac, username, password, digest, mode=4)
+
+    digest = genhash(mac, username, sha256(bytes(password, 'utf-8')).hexdigest().lower(), mode=5)
+    hashtest(mac, username, password, digest, mode=5)
+
 
 def main():
+    selftest()
     args = sys.argv[1:]
-    print("Netgear Telnet enabler V3 (c) B.Kerler 2021-2023")
+    print("Netgear Telnet enabler V3.1 (c) B.Kerler 2021-2023")
     ip = b''
     mac = b''
     username = b''
@@ -691,23 +712,36 @@ def main():
         username = "admin"  # Most devices only allows 'admin' as the username
     mac = mac.replace(":", "").replace("-", "").upper()
 
-    hash = genhash(mac, username, password, mode=1)
-    hashtest(mac, username, password, hash, mode=1)
-    if sendtelnet(ip, hash):
-        print(f"Done sending pw data to {ip}:23")
-    hash2 = genhash(mac, username, password, mode=2)
-    hashtest(mac, username, password, hash2, mode=2)
-    if sendtelnet(ip, hash2):
-        print(f"Done sending new (NBR750) pw data to {ip}:23")
-    hash3 = genhash(mac, username, password, mode=3)
-    hashtest(mac, username, password, hash3, mode=3)
-    if sendtelnet(ip, hash3):
-        print(f"Done sending new2 (RBR760) pw data to {ip}:23")
-    hash4 = genhash(mac, username, password, mode=4)
-    hashtest(mac, username, password, hash4, mode=4)
-    if sendtelnet(ip, hash4):
-        print(f"Done sending new3 (RAX10/RAX50) pw data to {ip}:23")
+    for pw in [
+        password,
+        sha256(bytes(password, 'utf-8')).hexdigest().lower(),
+        sha256(bytes(password, 'utf-8')).hexdigest().upper()
+    ]:
+        for mode in [1,2,3]:
+            if password == pw:
+                hlen = 0xB0
+            else:
+                hlen = 0xF8
+            hash = genhash(mac, username, pw, mode=mode)[:hlen]
+            if sendtelnet(ip, hash):
+                print(f"Done sending pw data {pw} to {ip}:23")
 
+
+"""
+strlcpy: src(0x402ce0),dst(0x402dec),towrite(bytearray(b'C89E434973A6\x00'))
+strlcpy: src(0x380c),dst(0x402dfc),towrite(bytearray(b'admin\x00'))
+strlcpy: src(0x402d5c),dst(0x402e0c),towrite(bytearray(b'a7c90d2a9d0abd82fb92ac7a7124cc3b7d3371f0ba6d8ba3dd5fd5f9b499b60f\x00'))
+Read Hook Ptr at PC: 0x2650, md5_update(data) Len:0x70 = 4338394534333439373341360000000061646d696e00000000000000000000006137633930643261396430616264383266623932616337613731323463633362376433333731663062613664386261336464356664356639623439396236306600000000000000000000000000000000
+memmove dst(0x402d1c) src(0x402dec) len(0x40) => data(4338394534333439373341360000000061646d696e00000000000000000000006137633930643261396430616264383266623932616337613731323463633362)
+memmove dst(0x402d1c) src(0x402e2c) len(0x30) => data(376433333731663062613664386261336464356664356639623439396236306600000000000000000000000000000000)
+memset at 0x402d4d char 00 len 0x7
+memmove dst(0x402cf0) src(0x402d04) len(0x10) => data(50b10894c9f109e6d77381a904898544)
+Read Hook Ptr at PC: 0x2664, md5_final(hash) Len:0x10 = 50b10894c9f109e6d77381a904898544
+snprintf: Dst(0x402ed4), Src(0x402ed4), Data("AMBIT_TELNET_ENABLE+a7c90d2a9d0abd82fb92ac7a7124cc3b7d3371f0ba6d8ba3dd5fd5f9b499b60f")
+Read Hook Ptr at PC: 0x268c, blowfish_key Len:0x54 = 414d4249545f54454c4e45545f454e41424c452b61376339306432613964306162643832666239326163376137313234636333623764333337316630626136643862613364643566643566396234393962363066
+Read Hook Ptr at PC: 0x26a4, blowfish_data Len:0xf8 = 50b10894c9f109e6d77381a9048985444338394534333439373341360000000061646d696e00000000000000000000006137633930643261396430616264383266623932616337613731323463633362376433333731663062613664386261336464356664356639623439396236306600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+Result: 2ffc30efd072c0fc99274352a1b5efbe19fc0572c7f3e4fe4818335e29368d26a723b2e8d98695d4ab6b09f99e488c6482174e21d0a82036cd3df1c0213acc498826738ecd4be3c0be99a7e6582cec4311715c1f6ec0c9ff77e66bb30420399ca3acbefc75e3238bef3bb3a3f999f6b8ab6b09f99e488c64ab6b09f99e488c64ab6b09f99e488c64ab6b09f99e488c64ab6b09f99e488c64ab6b09f99e488c64ab6b09f99e488c64ab6b09f99e488c64ab6b09f99e488c64ab6b09f99e488c64ab6b09f99e488c64ab6b09f99e488c64ab6b09f99e488c64ab6b09f99e488c64ab6b09f99e488c64ab6b09f99e488c64ab6b09f99e488c640000000000000000
+"""
 
 if __name__ == '__main__':
     main()
