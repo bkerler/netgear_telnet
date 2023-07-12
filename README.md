@@ -34,9 +34,7 @@ Ex:
 - Orbi NBR750 V4.6.5.11_1.5.43+r49254 - V4.6.14.3+r49254
 - Orbi RBR850 V4.6.9.11_2.3.5 - V4.6.14.3_2.3.12
 - LAX20 1.1.6.34
-
-## Prepared but untested:
-- Orbi RBR760 (V6.3.1.0)
+- Orbi RBR760 (V6.3.1.0 - V6.3.6.2_1.2.66)
 
 
 ## Credits :
