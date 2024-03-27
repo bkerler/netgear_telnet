@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Algo Netgear LBR20
-Copyright (c) 2021-2023 B. Kerler
+Copyright (c) 2021-2024 B. Kerler
 Blowfish algo (c) https://github.com/jashandeep-sohi/python-blowfish
 """
 
