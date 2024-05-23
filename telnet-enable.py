@@ -47,7 +47,7 @@ def get_arp_table_linux():
         arp_data_raw = proc_net_arp.read(-1).split("\n")[1:-1]
 
     parsed_arp_table = (dict(zip(('ip_address', 'type', 'flags', 'hw_address', 'mask', 'device'), v))
-                        for v in (re.split('\s+', i) for i in arp_data_raw))
+                        for v in (re.split(r'\s+', i) for i in arp_data_raw))
 
     return {d['ip_address']: d['hw_address'] for d in parsed_arp_table}
 
@@ -657,7 +657,7 @@ def main():
         if _platform == "win32" or _platform == "win64":
             with os.popen('arp -a') as f:
                 data = f.read()
-                for line in re.findall('([-.0-9]+)\s+([-0-9a-f]{17})\s+(\w+)', data):
+                for line in re.findall(r'([-.0-9]+)\s+([-0-9a-f]{17})\s+(\w+)', data):
                     if line[0] == look_for_ip:
                         mac = line[1]
                         ip = look_for_ip
