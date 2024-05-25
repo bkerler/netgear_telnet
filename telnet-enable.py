@@ -718,13 +718,10 @@ def main():
         sha256(bytes(password, 'utf-8')).hexdigest().upper()
     ]:
         for mode in [1,2,3]:
-            if password == pw:
-                hlen = 0xB0
-            else:
-                hlen = 0xF8
-            hash = genhash(mac, username, pw, mode=mode)[:hlen]
-            if sendtelnet(ip, hash):
-                print(f"Done sending pw data {pw} to {ip}:23")
+            for hlen in [0xB0,0xF8]:
+                hash = genhash(mac, username, pw, mode=mode)[:hlen]
+                if sendtelnet(ip, hash):
+                    print(f"Done sending pw data {pw} to {ip}:23")
 
 
 """
