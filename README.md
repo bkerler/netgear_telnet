@@ -34,6 +34,7 @@ Ex:
 - Nighthawk RAX75 V1.0.1.58_1.0.24, V1.0.10.140_1.0.79
 - Orbi NBR750 V4.6.5.11_1.5.43+r49254 - V4.6.14.3+r49254
 - Orbi RBR850 V4.6.9.11_2.3.5 - V4.6.14.3_2.3.12
+  Note: With V7, netgear started to replace telnet pw login with ssh rsa key login, so do not upgrade your router if you want to keep telnet login !
 - LAX20 1.1.6.34
 - Orbi RBR760 (V6.3.1.0 - V6.3.6.2_1.2.66)
 
